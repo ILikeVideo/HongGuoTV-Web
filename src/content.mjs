@@ -6,11 +6,19 @@ import {NativeMedia} from './native-media.mjs';
 import {WebAds} from './ads.mjs';
 import {CoverLoader} from './covers.mjs';
 import {tvDownloads} from './tv-downloads.mjs';
+import {installWheelNavigation} from './wheel-navigation.mjs';
+import {EPISODE_CELL_SELECTOR} from './episode-cells.mjs';
 let appearance=siteConfig(globalThis.__HG_SITE_CONFIG__),current=null,uiReady=false,lastUrl=location.href;
 let myPanel=null,myRevision=0,myVideos=[],pendingPhone='',websiteLoggedIn,accountFingerprint='',loginRequested=false;
 let myOriginalUrl='',myUrl='';const hiddenNative=new Set();
-const seriesCache=new Map(),processing=new Set(),requests=new Map(),enhanced=new WeakSet();let enhanceTimer;
+const seriesCache=new Map(),processing=new Set(),requests=new Map();let enhanceTimer;
 const host=(type,value={})=>window.postMessage({channel:'hg-web-host',type,...value},location.origin);
+let bridgeSeen=false,bridgeAttempts=0,bridgeTimer;
+function requestBridge(){
+ clearTimeout(bridgeTimer);host('snapshot');if(uiReady)return;
+ if(++bridgeAttempts===2&&!bridgeSeen)void chrome.runtime.sendMessage({type:'ShellEnsureBridge'}).then(()=>host('snapshot')).catch(()=>{});
+ if(bridgeAttempts<12)bridgeTimer=setTimeout(requestBridge,1000);
+}
 const native=new NativeMedia(hint);
 const ads=new WebAds(()=>current);
 const element=(tag,text,cls='')=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
@@ -34,23 +42,20 @@ function enhanceEpisodes(){
  if(!current||!uiReady)return;
  let waiting=false;
  const feed=location.pathname==='/'&&document.querySelector('[data-home-feed]');
- for(const cell of document.querySelectorAll('[class*="pc-episode-"],[class*="episode-cell"],[class*="episode-item"],[class*="episodeItem"]')){
+ for(const cell of document.querySelectorAll(EPISODE_CELL_SELECTOR)){
   if(!cell.querySelector('[class*="episode-text"],[class*="episodeText"]')&&!/^(A|BUTTON)$/.test(cell.tagName))continue;
   const text=cell.textContent.trim();if(!/^\d+$/.test(text))continue;
   const rect=cell.getBoundingClientRect();if(feed&&(rect.width===0||rect.right<=0||rect.left>=innerWidth))continue;
   const index=Number(text)-1;if(index<0||index>=current.episodes.length)continue;
   if(!cell.hasAttribute('data-hg-site-ready')){waiting=true;continue;}
   cell.dataset.hgEpisode=String(index);
-  if(index<current.accessible)continue;
+  if(index<current.accessible){cell.removeAttribute('data-hg-unlocked');cell.querySelector('.hg-unlock-icon')?.remove();if(cell.getAttribute('aria-label')?.endsWith('，已解锁'))cell.setAttribute('aria-label',`第${index+1}集`);continue;}
   cell.dataset.hgUnlocked='true';
+  if(cell.hasAttribute('aria-label')&&cell.getAttribute('aria-label')!==`第${index+1}集，已解锁`)cell.setAttribute('aria-label',`第${index+1}集，已解锁`);
   if(!cell.querySelector('.hg-unlock-icon')){
    const icon=document.createElementNS('http://www.w3.org/2000/svg','svg');icon.setAttribute('viewBox','0 0 24 24');icon.setAttribute('class','hg-unlock-icon');icon.setAttribute('aria-label','已解锁');
    const path=document.createElementNS(icon.namespaceURI,'path');path.setAttribute('d','M7 10V7a5 5 0 0 1 9.6-2M5 10h14v11H5zM12 14v3');path.setAttribute('fill','none');path.setAttribute('stroke','currentColor');path.setAttribute('stroke-width','2');path.setAttribute('stroke-linecap','round');icon.append(path);
    cell.append(icon);
-  }
-  if(!enhanced.has(cell)&&cell.tagName!=='A'){
-   enhanced.add(cell);
-   cell.addEventListener('click',event=>{const target=current;if(!target||index<target.accessible)return;event.preventDefault();event.stopImmediatePropagation();location.href=`/player/${target.id}/${target.episodes[index]}`;},true);
   }
  }
  if(waiting&&!enhanceTimer)enhanceTimer=setTimeout(()=>{enhanceTimer=null;enhanceEpisodes();},100);
@@ -79,9 +84,10 @@ addEventListener('hg-site-config',()=>{appearance=siteConfig(globalThis.__HG_SIT
 addEventListener('message',event=>{
  if(event.source!==window||event.origin!==location.origin||event.data?.channel!=='hg-web-bridge')return;
  const {type,value}=event.data;
+ if(type==='bridge-ready'){bridgeSeen=true;return;}
  if(type==='native-source'){void source(value);return;}
  if(type==='native-cancel'){requests.get(value?.requestId)?.abort();native.cancel(value?.requestId);return;}
- if(type==='ready'){uiReady=true;navigation();tvDownloads(appearance);enhanceEpisodes();checkWebsiteAccount();if(location.hash==='#hg-my')void showMy(false);if(location.hash==='#hg-login'&&!loginRequested){loginRequested=true;openWebsiteLogin();}}
+ if(type==='ready'){uiReady=true;clearTimeout(bridgeTimer);navigation();tvDownloads(appearance);enhanceEpisodes();checkWebsiteAccount();if(location.hash==='#hg-my')void showMy(false);if(location.hash==='#hg-login'&&!loginRequested){loginRequested=true;openWebsiteLogin();}}
  if(type==='snapshot'&&value&&/^\d+$/.test(value.id)&&Array.isArray(value.episodes)){current=value;enhanceEpisodes();}
  if(type==='account'){
   if(!value||typeof value.loggedIn!=='boolean')return;
@@ -131,7 +137,17 @@ function nextLocked(event){
  if(index<0||!next||index+1<current.accessible)return;
  event.preventDefault();event.stopImmediatePropagation();location.href=`/player/${current.id}/${next}`;
 }
+// 推荐栏有原站捕获阶段的锁定动作，在 React 根节点之前处理已解锁选集。
+document.addEventListener('click',event=>{const cell=event.target.closest?.('[data-hg-unlocked="true"][data-hg-episode]');if(!cell)return;const target=current,selected=Number(cell.dataset.hgEpisode);if(!target||!Number.isInteger(selected)||selected<target.accessible||!target.episodes[selected])return;event.preventDefault();event.stopImmediatePropagation();location.href=`/player/${target.id}/${target.episodes[selected]}`;},true);
 document.addEventListener('click',nextLocked,true);document.addEventListener('ended',nextLocked,true);
+installWheelNavigation({disabled:()=>!!myPanel||!uiReady,episode:direction=>{
+ const match=location.pathname.match(/^\/player\/(\d+)(?:\/(\d+))?\/?$/);if(!match||current?.id!==match[1])return false;
+ const active=document.querySelector('.xgplayer video')?.dataset.hgVideoId||match[2]||current.videoId||current.episodes[0],index=current.episodes.indexOf(active),next=current.episodes[index+direction];
+ if(index<0||!next)return false;
+ const cell=document.querySelector(`[data-hg-episode="${index+direction}"]`);
+ if(index+direction>=current.accessible||!cell)location.href=`/player/${current.id}/${next}`;else cell.click();
+ return true;
+},feed:direction=>{if(!document.querySelector('.swiper-slide-active'))return false;host('wheel-feed',{direction});return true;}});
 function captureLoginPhone(event){const submit=event.type==='submit'||event.target.closest?.('button,[role="button"]')?.textContent?.match(/登录|注册/);if(!submit)return;const phone=[...document.querySelectorAll('input[type="tel"],input[placeholder*="手机号"],input[name="mobile"],input[name="phone"]')].map(input=>normalizePhone(input.value)).find(Boolean);if(phone)pendingPhone=phone;}
 for(const type of ['submit','click','mousedown'])document.addEventListener(type,captureLoginPhone,true);
 function openWebsiteLogin(){const login=[...document.querySelectorAll('header button,header a')].find(n=>n.textContent.trim()==='登录');if(login)login.click();else hint('请使用官网右上角账号入口管理登录');}
@@ -141,5 +157,7 @@ function checkWebsiteAccount(){
 chrome.runtime.onMessage.addListener(message=>{if(message.type==='account-changed'&&myPanel){closeMy();void showMy();}if(message.type==='open-website-login')openWebsiteLogin();});
 let scheduled=false;
 new MutationObserver(()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;navigation();if(uiReady)tvDownloads(appearance);enhanceEpisodes();checkWebsiteAccount();if(myPanel){if(location.href!==myUrl)closeMy(false);else syncMyLayout();}if(location.href!==lastUrl){lastUrl=location.href;host('snapshot');}});}).observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','hidden','data-feed-item','data-hg-site-ready']});
-addEventListener('pagehide',()=>{for(const controller of requests.values())controller.abort();myPanel?.hgCovers?.dispose();native.dispose();ads.dispose();});
-host('snapshot');
+addEventListener('pagehide',event=>{clearTimeout(bridgeTimer);if(event.persisted)return;for(const controller of requests.values())controller.abort();myPanel?.hgCovers?.dispose();native.dispose();ads.dispose();});
+addEventListener('pageshow',event=>{if(event.persisted){bridgeSeen=false;bridgeAttempts=0;requestBridge();}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&(!bridgeSeen||!uiReady)){bridgeAttempts=0;requestBridge();}});
+requestBridge();

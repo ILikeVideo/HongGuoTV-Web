@@ -2,9 +2,10 @@
 // MAIN 世界只接触官网播放器与公开作品资料，账号凭据由扩展后台保管。
 import { accountSignal } from "./website-account.mjs";
 import {installNativeBridge} from './native-bridge.mjs';
+import {snapshotKey} from './bridge-state.mjs';
+import {EPISODE_CELL_SELECTOR} from './episode-cells.mjs';
 (() => {
   if (window.__hongguoEnhancerBridge) return;
-  window.__hongguoEnhancerBridge = true;
   let latest = null,
     fingerprint = "",
     pauseRecord = [],
@@ -66,7 +67,7 @@ import {installNativeBridge} from './native-bridge.mjs';
       );
     if (!series) return;
     if (activeId) series = { ...series, videoId: activeId };
-    const key = series.id + ":" + series.videoId + ":" + location.href;
+    const key = snapshotKey(series,location.href);
     latest = series;
     if (key !== fingerprint) {
       fingerprint = key;
@@ -113,7 +114,7 @@ import {installNativeBridge} from './native-bridge.mjs';
           if (info) emit("account", info);
         }
       }
-    for(const node of document.querySelectorAll('[class*="pc-episode-"],[class*="episode-cell"],[class*="episode-item"]'))if(!node.hasAttribute('data-hg-site-ready')&&Object.keys(node).some(k=>k.startsWith('__reactFiber')||k.startsWith('__reactProps')))node.setAttribute('data-hg-site-ready','true');
+    for(const node of document.querySelectorAll(EPISODE_CELL_SELECTOR))if(!node.hasAttribute('data-hg-site-ready')&&Object.keys(node).some(k=>k.startsWith('__reactFiber')||k.startsWith('__reactProps')))node.setAttribute('data-hg-site-ready','true');
     for(const node of document.querySelectorAll('button[class*="pc-hero-download-"],[class*="pc-download-"] [class*="pc-guide-box-"]'))if(!node.hasAttribute('data-hg-site-ready')&&Object.keys(node).some(k=>k.startsWith('__reactFiber')||k.startsWith('__reactProps')))node.setAttribute('data-hg-site-ready','true');
     publishCurrent();
   }
@@ -226,7 +227,14 @@ import {installNativeBridge} from './native-bridge.mjs';
     )
       return;
     const message = event.data;
+    if(message.type==='wheel-feed'&&[-1,1].includes(message.direction)){
+      const active=document.querySelector('.swiper-slide-active');
+      const swiper=active?.closest('.swiper')?.swiper;
+      const move=message.direction>0?swiper?.slideNext:swiper?.slidePrev;
+      if(typeof move==='function')move.call(swiper);
+    }
     if (message.type === "snapshot") {
+      emit('bridge-ready',null);
       scan();
       if (hydrated) emit("ready", null);
       if (latest) emit("snapshot", latest);
@@ -278,4 +286,6 @@ import {installNativeBridge} from './native-bridge.mjs';
     attributeFilter: ["class", "data-feed-item"],
   });
   setInterval(scan, 500);
+  window.__hongguoEnhancerBridge = true;
+  emit('bridge-ready',null);
 })();

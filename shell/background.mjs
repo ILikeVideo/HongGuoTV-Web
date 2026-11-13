@@ -9,7 +9,7 @@ import {openOfficialSite} from './toolbar.mjs';
 import {coverImage,cancelCover,cancelCovers} from './covers.mjs';
 const base=chrome.runtime.getURL(''),extensionOrigin=base.slice(0,-1),client=/Edg\//.test(navigator.userAgent)?'edge':'chrome';
 const compatible=(kind,bundle)=>kind!=='web'||bundle?.siteAdapter==='native-v1'&&bundle.nativeProtocol===1;
-const updater=new Updates(chrome.storage.local,{web:builtin,algorithm:builtinAlgorithm},publicKey.trim(),203,client,undefined,compatible);
+const updater=new Updates(chrome.storage.local,{web:builtin,algorithm:builtinAlgorithm},publicKey.trim(),205,client,undefined,compatible);
 const storageReady=(async()=>{const result=await chrome.storage.local.get('dynamic:web'),state=result['dynamic:web'];if(!state)return;let changed=false;for(const key of ['active','previous','pending'])if(state[key]&&!compatible('web',state[key].bundle)){state[key]=null;changed=true;}if(changed)await chrome.storage.local.set({'dynamic:web':state});})();
 const ports=new Set(),jobs=new Map(),networkJobs=new Map();let service,creating,selected,checkedAt=0,networkRule=100;
 void chrome.storage.local.setAccessLevel({accessLevel:'TRUSTED_CONTEXTS'});
@@ -27,7 +27,8 @@ async function adsConfig(){
 }
 async function ensureService(){
  await storageReady;
- if(service)return service;if(creating)return creating;
+ // hello 只代表端口连接，须等沙盒自检和业务监听就绪后才能发送请求。
+ if(creating)return creating;if(service)return service;
  creating=(async()=>{for(let attempt=0;attempt<3;attempt++){
   selected={web:(await updater.current('web')).bundle,algorithm:(await updater.current('algorithm')).bundle};
   const states=await chrome.storage.local.get(['dynamic:web','dynamic:algorithm']);
@@ -57,7 +58,7 @@ async function ensureService(){
 async function checkUpdate(force=false){
  await storageReady;
  if(force||Date.now()-checkedAt>=30000){checkedAt=Date.now();await updater.check().catch(error=>{globalThis.hgUpdateFault=error.message;});}
- if(service&&!jobs.size&&![...ports].some(p=>p.name==='shell-player')){
+ if(service&&!creating&&!jobs.size&&![...ports].some(p=>p.name==='shell-player')){
   const latest={web:(await updater.current('web')).bundle,algorithm:(await updater.current('algorithm')).bundle},states=await chrome.storage.local.get(['dynamic:web','dynamic:algorithm']);
   if(states['dynamic:web']?.pending||states['dynamic:algorithm']?.pending||latest.web.version!==selected.web.version||latest.algorithm.version!==selected.algorithm.version){service=null;await chrome.offscreen.closeDocument().catch(()=>{});}
  }
@@ -130,6 +131,12 @@ chrome.runtime.onConnect.addListener(connected);
 chrome.action.onClicked.addListener(()=>{void openOfficialSite().catch(()=>{});});
 chrome.tabs.onRemoved.addListener(id=>cancelCovers(String(id)));
 chrome.runtime.onMessage.addListener((m,sender,reply)=>{
+ if(site(sender)&&m?.type==='ShellOpenTV'){
+  chrome.tabs.create({url:siteConfig(selected?.web?.siteConfig).tvWebsite,active:true}).then(()=>reply({ok:true}),()=>reply({ok:false}));return true;
+ }
+ if(site(sender)&&m?.type==='ShellEnsureBridge'){
+  chrome.scripting.executeScript({target:{tabId:sender.tab.id,frameIds:[sender.frameId??0]},files:['bridge.js'],world:'MAIN',injectImmediately:true}).then(()=>reply({ok:true}),()=>reply({ok:false,error:'官网适配未能恢复，请刷新页面'}));return true;
+ }
  if((site(sender)||trusted(sender))&&m?.type==='ShellCover'){coverImage(m,String(sender.tab?.id??sender.url)).then(value=>reply({ok:true,value}),()=>reply({ok:false,error:'封面暂未加载'}));return true;}
  if((site(sender)||trusted(sender))&&m?.type==='ShellCancelCover'){cancelCover(m.requestId,String(sender.tab?.id??sender.url));reply({ok:true});return;}
  if((site(sender)||trusted(sender))&&m?.type==='ShellAdsConfig'){adsConfig().then(config=>reply({ok:true,config}));return true;}

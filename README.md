@@ -4,7 +4,7 @@
 
 [下载插件](https://github.com/ILikeVideo/HongGuoTV-Web/releases) · [图文安装教程](https://hongguotv.curatedlifefinds.com/web-extension/install/) · [功能介绍](https://hongguotv.curatedlifefinds.com/web-extension/) · [红果TV官网](https://hongguotv.curatedlifefinds.com/)
 
-**当前发布：0.2.3 开发预览。** Chrome 已完成真实播放回归；Edge 样本第 6、7 集真实播放通过，但部分视频地址存在间歇超时／加载失败，整体播放回归尚未全部通过。不能将绿色解锁图标理解为所有片源均保证可播。完整证据和未覆盖项见 [VALIDATION.md](VALIDATION.md)。
+**当前发布：0.2.5。** 已完成 Chrome、Edge 的真实推荐选集、滚轮切换及重新打开回归。网络、片源和其他系统仍有适用边界，完整证据和未覆盖项见 [VALIDATION.md](VALIDATION.md)。
 
 ## 功能
 
@@ -18,21 +18,21 @@
 
 支持**电脑 Chrome / Edge 138+**。无需开启“允许用户脚本”，暂未上架 Chrome Web Store 或 Edge Add-ons。手机浏览器、Safari、Firefox 不在本版支持范围。
 
-1. 在 [Releases](https://github.com/ILikeVideo/HongGuoTV-Web/releases) 的 Assets 下载 `hongguo-web-0.2.3.zip`，解压到固定目录。不要下载 GitHub 自动生成的 Source code 作为安装包。
+1. 在 [Releases](https://github.com/ILikeVideo/HongGuoTV-Web/releases) 的 Assets 下载 `hongguo-web-0.2.5.zip`，**保持 ZIP 原样，无需解压**。不要下载 GitHub 自动生成的 Source code 作为安装包。
 2. 复制下表地址到对应浏览器的**地址栏**，按回车。
-3. 开启开发者模式，点击加载按钮，选择**直接包含 `manifest.json`** 的解压目录。
+3. 开启开发者模式，将 ZIP 从文件管理器**直接拖入扩展管理页的空白区域**，按浏览器提示确认。
 4. 确认插件已启用，刷新红果官网；顶部“榜单”右侧、“下载”左侧出现“我的”。
 
-| 浏览器 | 扩展管理页地址 | 开关位置 | 加载入口 |
+| 浏览器 | 扩展管理页地址 | 开关位置 | 安装动作 |
 | --- | --- | --- | --- |
-| Google Chrome | `chrome://extensions/` | 右上角“开发者模式” | 左上角“加载已解压的扩展程序” |
-| Microsoft Edge | `edge://extensions/` | 左下角“开发人员模式” | 上方“加载解压缩的扩展” |
+| Google Chrome | `chrome://extensions/` | 右上角“开发者模式” | 拖入 ZIP |
+| Microsoft Edge | `edge://extensions/` | 左下角“开发人员模式” | 拖入 ZIP |
 
 内部地址不能从普通网页直接打开，请复制到地址栏；不要粘贴到搜索框。组织管理的浏览器可能禁止加载，请联系管理员。
 
-![Chrome：1 开发者模式，2 加载目录，3 重新加载](docs/images/chrome-install.png)
+![Chrome：1 开发者模式，2 拖入ZIP，3 插件已启用](docs/images/chrome-install.png)
 
-![Edge：1 开发人员模式，2 加载目录，3 重新加载](docs/images/edge-install.png)
+![Edge：1 开发人员模式，2 拖入ZIP，3 插件已启用](docs/images/edge-install.png)
 
 截图为 Chrome 157、Edge 155 中文管理页的真实截图，橙框是操作标注。浏览器版本不同，菜单名称和位置可能变化。
 
@@ -40,15 +40,15 @@
 
 ## 更新、隐私和问题排查
 
-ZIP 更新：关闭红果官网标签页，把新版本文件完整替换到**原固定目录**，在扩展管理页点“重新加载”，然后重新打开官网。无需卸载；卸载会删除本机插件资料。不要移动或删除加载目录，也不要同时启用多个版本。
+ZIP 更新：关闭红果官网标签页，下载新版 ZIP，打开开发者模式后拖入，按浏览器提示完成。确认只启用一个版本，再刷新官网。若原来采用解压目录安装，可在原固定目录替换文件后点击“重新加载”，保留本机资料；不要先卸载。
 
 兼容的业务与算法会检查后台更新，经签名与摘要验证后启用；断网使用最后确认版本或内置版本。ZIP 本身仍需手动更新。
 
 账号登录、验证码、退出与换号均在官网完成。关联资料与会话保存在本机扩展存储，不云同步、不上传红果TV后台；官网退出后清除当前关联。请勿在反馈中提交手机号、验证码、Cookie、密钥或完整播放地址。
 
-- **缺少 manifest.json：**先解压，再选择直接包含该文件的目录，不能选择 ZIP 或父目录。
+- **拖入 ZIP 没反应：**确认已开启开发者模式，拖到扩展管理页内容区，而非地址栏。兼容方法：解压 ZIP，点击“加载已解压的扩展程序”，选择直接包含 `manifest.json` 的目录。
 - **官网没有“我的”：**确认插件已启用、允许访问官网，重新加载后刷新标签页。
-- **选集后无法播放：**可能是地址超时、接口拒绝、下架或格式兼容问题。请反馈剧名、集数、浏览器版本与错误提示；当前 Edge 偶发加载失败仍在观察。
+- **选集后无法播放：**可能是地址超时、接口拒绝、下架或格式兼容问题。请反馈剧名、集数、浏览器版本与错误提示。
 - **卸载：**扩展管理页 → 红果网页增强 → 移除，不会删除官网账号或云端片单。
 
 ## 源码与版本管理

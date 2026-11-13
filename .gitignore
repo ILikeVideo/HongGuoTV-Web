@@ -5,3 +5,4 @@ test-results/
 *.zip
 SHA256SUMS
 artifacts/
+docs/images/*-original.png
