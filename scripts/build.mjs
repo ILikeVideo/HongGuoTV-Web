@@ -123,6 +123,7 @@ await copyFile(
   path.join(root, "INSTALL.md"),
   path.join(root, "dist/安装说明.md"),
 );
-await copyFile(path.join(root,'VALIDATION.md'),path.join(root,'dist/验证说明.md'));
+await mkdir(path.join(root,'dist/docs/images'),{recursive:true});
+for(const name of ['chrome-install.png','edge-install.png'])await copyFile(path.join(root,'docs/images',name),path.join(root,'dist/docs/images',name));
 await writeFile(path.join(root,'dist/licenses/qrcode-generator.txt'),`qrcode-generator — Copyright (c) 2009 Kazuhiko Arase\n\nMIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n`,'utf8');
 console.log(`红果网页增强 ${pkg.version} 动态壳构建完成`);

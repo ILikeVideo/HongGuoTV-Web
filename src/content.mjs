@@ -130,9 +130,12 @@ addEventListener('popstate',()=>{if(myPanel&&location.href!==myUrl)closeMy(false
 document.addEventListener('click',event=>{if(!myPanel||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;const link=event.target.closest?.('header a,nav a');if(link&&link.id!=='hg-my-tab'&&new URL(link.href,location.href).origin===location.origin)closeMy(false);},true);
 function nextLocked(event){
  if(!current)return;
- const fromVideo=event.type==='ended',video=fromVideo?event.target:document.querySelector('.xgplayer video');
- if(fromVideo&&!video?.dataset.hgVideoId)return;
- if(!fromVideo&&!event.target.closest?.('.xgplayer-pc-next'))return;
+ const fromVideo=event.type==='ended',activeVideo=document.querySelector('.swiper-slide-active video')??document.querySelector('.xgplayer video'),video=fromVideo?event.target:activeVideo;
+ if(fromVideo&&!video?.dataset.hgVideoId&&(current.mode!=='episodes'||video!==activeVideo))return;
+ if(!fromVideo){
+  if(!event.target.closest?.('.xgplayer-pc-next,button[aria-label="下一集"]'))return;
+  if(current.mode==='feed'&&!event.target.closest('[data-feed-controls],.xgplayer-pc-next'))return;
+ }
  const active=video?.dataset.hgVideoId||location.pathname.match(/^\/player\/\d+\/(\d+)/)?.[1]||current.videoId,index=current.episodes.indexOf(active),next=current.episodes[index+1];
  if(index<0||!next||index+1<current.accessible)return;
  event.preventDefault();event.stopImmediatePropagation();location.href=`/player/${current.id}/${next}`;
@@ -140,14 +143,15 @@ function nextLocked(event){
 // 推荐栏有原站捕获阶段的锁定动作，在 React 根节点之前处理已解锁选集。
 document.addEventListener('click',event=>{const cell=event.target.closest?.('[data-hg-unlocked="true"][data-hg-episode]');if(!cell)return;const target=current,selected=Number(cell.dataset.hgEpisode);if(!target||!Number.isInteger(selected)||selected<target.accessible||!target.episodes[selected])return;event.preventDefault();event.stopImmediatePropagation();location.href=`/player/${target.id}/${target.episodes[selected]}`;},true);
 document.addEventListener('click',nextLocked,true);document.addEventListener('ended',nextLocked,true);
-installWheelNavigation({disabled:()=>!!myPanel||!uiReady,episode:direction=>{
- const match=location.pathname.match(/^\/player\/(\d+)(?:\/(\d+))?\/?$/);if(!match||current?.id!==match[1])return false;
- const active=document.querySelector('.xgplayer video')?.dataset.hgVideoId||match[2]||current.videoId||current.episodes[0],index=current.episodes.indexOf(active),next=current.episodes[index+direction];
+function stepEpisode(direction){
+ const match=location.pathname.match(/^\/player\/(\d+)(?:\/(\d+))?\/?$/),inline=location.pathname==='/'&&current?.mode==='episodes';if(!current||!(match&&current.id===match[1])&&!inline)return false;
+ const active=(document.querySelector('.swiper-slide-active video')??document.querySelector('.xgplayer video'))?.dataset.hgVideoId||match?.[2]||current.videoId||current.episodes[0],index=current.episodes.indexOf(active),next=current.episodes[index+direction];
  if(index<0||!next)return false;
- const cell=document.querySelector(`[data-hg-episode="${index+direction}"]`);
+ const cell=document.querySelector(`.swiper-slide-active [data-hg-episode="${index+direction}"]`)??[...document.querySelectorAll(`[data-hg-episode="${index+direction}"]`)].find(n=>{const r=n.getBoundingClientRect();return r.width&&r.height&&r.left<innerWidth&&r.right>0&&r.top<innerHeight&&r.bottom>0;});
  if(index+direction>=current.accessible||!cell)location.href=`/player/${current.id}/${next}`;else cell.click();
  return true;
-},feed:direction=>{if(!document.querySelector('.swiper-slide-active'))return false;host('wheel-feed',{direction});return true;}});
+}
+installWheelNavigation({disabled:()=>!!myPanel||!uiReady,episode:stepEpisode,feed:direction=>{if(current?.mode==='episodes')return stepEpisode(direction);if(!document.querySelector('.swiper-slide-active'))return false;host('wheel-feed',{direction});return true;}});
 function captureLoginPhone(event){const submit=event.type==='submit'||event.target.closest?.('button,[role="button"]')?.textContent?.match(/登录|注册/);if(!submit)return;const phone=[...document.querySelectorAll('input[type="tel"],input[placeholder*="手机号"],input[name="mobile"],input[name="phone"]')].map(input=>normalizePhone(input.value)).find(Boolean);if(phone)pendingPhone=phone;}
 for(const type of ['submit','click','mousedown'])document.addEventListener(type,captureLoginPhone,true);
 function openWebsiteLogin(){const login=[...document.querySelectorAll('header button,header a')].find(n=>n.textContent.trim()==='登录');if(login)login.click();else hint('请使用官网右上角账号入口管理登录');}

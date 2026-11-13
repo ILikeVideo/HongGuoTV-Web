@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "红果网页增强",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "红果短剧选集播放、手机账号片单与观看进度续播。",
   "minimum_chrome_version": "138",
   "icons": {

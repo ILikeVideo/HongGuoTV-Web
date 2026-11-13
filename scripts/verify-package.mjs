@@ -11,7 +11,7 @@ assert.ok(!names.some(n=>n.includes('TEST-ONLY')||n.endsWith('.map')));
 const manifest=JSON.parse(strFromU8(files['manifest.json']));assert.equal(manifest.version,pkg.version);assert.ok(!manifest.permissions.includes('userScripts'));
 for(const file of [manifest.background.service_worker,...manifest.content_scripts.flatMap(s=>[...(s.js??[]),...(s.css??[])])])assert.ok(files[file],`缺少安装文件：${file}`);
 const key=(await readFile(path.resolve(root,'algorithms/trust-public-key.hex'),'utf8')).trim();assert.ok(strFromU8(files['background.js']).includes(key),'归档必须使用正式信任公钥');
-assert.ok(files['安装说明.md']);assert.ok(files['验证说明.md']);
+assert.ok(files['安装说明.md']);assert.ok(!files['验证说明.md'],'研发记录不进入用户安装包');
 const sha256=createHash('sha256').update(bytes).digest('hex');assert.equal((await readFile(path.join(root,'artifacts/SHA256SUMS'),'utf8')).trim(),sha256+'  '+name);
 const bundle=await readFile(path.join(root,'artifacts',`hongguo-web-function-${pkg.version}.json`)),functionSha256=createHash('sha256').update(bundle).digest('hex');
 console.log(JSON.stringify({version:manifest.version,bytes:bytes.length,files:names.length,userScriptsPermission:false,productionTrustKey:true,sha256,functionSha256}));

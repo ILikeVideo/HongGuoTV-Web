@@ -2,7 +2,7 @@
 // MAIN 世界只接触官网播放器与公开作品资料，账号凭据由扩展后台保管。
 import { accountSignal } from "./website-account.mjs";
 import {installNativeBridge} from './native-bridge.mjs';
-import {snapshotKey} from './bridge-state.mjs';
+import {snapshotKey,playbackMode} from './bridge-state.mjs';
 import {EPISODE_CELL_SELECTOR} from './episode-cells.mjs';
 (() => {
   if (window.__hongguoEnhancerBridge) return;
@@ -11,7 +11,7 @@ import {EPISODE_CELL_SELECTOR} from './episode-cells.mjs';
     pauseRecord = [],
     suppressed = false,
     hydrated = false;
-  const knownSeries = new Map();
+  const knownSeries = new Map();let episodeSeries='';
   const entryUrl = new URL(location.href);
   const entrySeries = entryUrl.pathname.match(/^\/player\/(\d+)/)?.[1];
   const entryVideoId =
@@ -67,6 +67,10 @@ import {EPISODE_CELL_SELECTOR} from './episode-cells.mjs';
       );
     if (!series) return;
     if (activeId) series = { ...series, videoId: activeId };
+    const slides=document.querySelector('.swiper-slide-active')?.closest('.swiper')?.querySelectorAll('.swiper-wrapper > .swiper-slide')??[];
+    const ids=[...slides].map(slide=>slide.querySelector('[data-feed-item]')?.getAttribute('data-feed-item'));
+    const mode=routeSeries?'episodes':playbackMode(series.episodes,ids,episodeSeries===series.id?'episodes':'feed');
+    episodeSeries=mode==='episodes'?series.id:'';series={...series,mode};
     const key = snapshotKey(series,location.href);
     latest = series;
     if (key !== fingerprint) {
@@ -87,6 +91,10 @@ import {EPISODE_CELL_SELECTOR} from './episode-cells.mjs';
     if (value.data?.detail) accept(value.data.detail, value.data.item_id);
     for (const key of ["initialHomeFeed", "items", "entries", "list", "data"])
       if (value[key] && value[key] !== value) inspect(value[key], depth + 1);
+  }
+  function markInteractiveNodes(){
+    for(const node of document.querySelectorAll(EPISODE_CELL_SELECTOR))if(!node.hasAttribute('data-hg-site-ready')&&Object.keys(node).some(k=>k.startsWith('__reactFiber')||k.startsWith('__reactProps')))node.setAttribute('data-hg-site-ready','true');
+    for(const node of document.querySelectorAll('button[class*="pc-hero-download-"],[class*="pc-download-"] [class*="pc-guide-box-"]'))if(!node.hasAttribute('data-hg-site-ready')&&Object.keys(node).some(k=>k.startsWith('__reactFiber')||k.startsWith('__reactProps')))node.setAttribute('data-hg-site-ready','true');
   }
   function scan() {
     const rank = document.querySelector('header a[href*="/rank/"]')??[...document.querySelectorAll('header a,header button,header [class*="link"],header [class*="nav"]')].find(n=>n.textContent.trim()==='榜单');
@@ -114,8 +122,7 @@ import {EPISODE_CELL_SELECTOR} from './episode-cells.mjs';
           if (info) emit("account", info);
         }
       }
-    for(const node of document.querySelectorAll(EPISODE_CELL_SELECTOR))if(!node.hasAttribute('data-hg-site-ready')&&Object.keys(node).some(k=>k.startsWith('__reactFiber')||k.startsWith('__reactProps')))node.setAttribute('data-hg-site-ready','true');
-    for(const node of document.querySelectorAll('button[class*="pc-hero-download-"],[class*="pc-download-"] [class*="pc-guide-box-"]'))if(!node.hasAttribute('data-hg-site-ready')&&Object.keys(node).some(k=>k.startsWith('__reactFiber')||k.startsWith('__reactProps')))node.setAttribute('data-hg-site-ready','true');
+    markInteractiveNodes();
     publishCurrent();
   }
   const originalFetch = window.fetch;
@@ -276,7 +283,7 @@ import {EPISODE_CELL_SELECTOR} from './episode-cells.mjs';
       scheduled = true;
       requestAnimationFrame(() => {
         scheduled = false;
-        publishCurrent();
+        markInteractiveNodes();publishCurrent();
       });
     }
   }).observe(document.documentElement, {

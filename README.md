@@ -33,7 +33,7 @@
 
 ![Edge：1 开发人员模式，2 拖入ZIP，3 插件已启用](docs/images/edge-install.png)
 
-截图为 Chrome 157、Edge 155 中文管理页的真实截图，橙框是操作标注。浏览器版本不同，菜单名称和位置可能变化。
+图示为中文版浏览器的管理页，橙框标明操作位置。不同浏览器的菜单名称和位置可能略有区别。
 
 [Chrome 官方下载](https://www.google.com/chrome/) · [Chrome 官方安装说明](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked) · [Edge 官方下载](https://www.microsoft.com/edge/download) · [Edge 官方安装说明](https://learn.microsoft.com/microsoft-edge/extensions/getting-started/extension-sideloading)
 

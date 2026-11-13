@@ -9,7 +9,7 @@ import {openOfficialSite} from './toolbar.mjs';
 import {coverImage,cancelCover,cancelCovers} from './covers.mjs';
 const base=chrome.runtime.getURL(''),extensionOrigin=base.slice(0,-1),client=/Edg\//.test(navigator.userAgent)?'edge':'chrome';
 const compatible=(kind,bundle)=>kind!=='web'||bundle?.siteAdapter==='native-v1'&&bundle.nativeProtocol===1;
-const updater=new Updates(chrome.storage.local,{web:builtin,algorithm:builtinAlgorithm},publicKey.trim(),205,client,undefined,compatible);
+const updater=new Updates(chrome.storage.local,{web:builtin,algorithm:builtinAlgorithm},publicKey.trim(),206,client,undefined,compatible);
 const storageReady=(async()=>{const result=await chrome.storage.local.get('dynamic:web'),state=result['dynamic:web'];if(!state)return;let changed=false;for(const key of ['active','previous','pending'])if(state[key]&&!compatible('web',state[key].bundle)){state[key]=null;changed=true;}if(changed)await chrome.storage.local.set({'dynamic:web':state});})();
 const ports=new Set(),jobs=new Map(),networkJobs=new Map();let service,creating,selected,checkedAt=0,networkRule=100;
 void chrome.storage.local.setAccessLevel({accessLevel:'TRUSTED_CONTEXTS'});

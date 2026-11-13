@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 if(process.argv[2])process.env.HG_TEST_CHANNEL=process.argv[2];
 const root=path.resolve(import.meta.dirname,'..'),{context,extensionId,channel,userScriptsDisabled}=await launch(root);
 try{
+ if(process.env.HG_TEST_DROP_FIRST_INIT==='1')await context.addInitScript(()=>{if(!location.pathname.endsWith('/sandbox.html'))return;let dropped=false;addEventListener('message',event=>{if(!dropped&&event.source===parent&&event.data?.shell==='init'){dropped=true;window.__hgDroppedInit=true;event.stopImmediatePropagation();}},true);});
  const page=await context.newPage();await page.goto(`chrome-extension://${extensionId}/account.html`,{waitUntil:'domcontentloaded'});
  const result=await page.evaluate(async()=>{
   const start=Date.now(),calls=Array.from({length:16},()=>chrome.runtime.sendMessage({type:'GetProfile',requestId:crypto.randomUUID()}));
@@ -12,5 +13,6 @@ try{
   return {count:rows.length,allReturned:rows.every(r=>r?.ok===true),elapsed:Date.now()-start};
  });
  assert.equal(result.count,16);assert.equal(result.allReturned,true);assert.equal(userScriptsDisabled,true);
+ if(process.env.HG_TEST_DROP_FIRST_INIT==='1'){const frame=page.frames().find(f=>f.url().includes('/sandbox.html'));assert.ok(frame);assert.equal(await frame.evaluate(()=>window.__hgDroppedInit),true,'必须实际丢弃首次初始化消息');}
  console.log(channel,'冷启动16路并发读取通过',result);
 }finally{await context.close();}
