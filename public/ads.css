@@ -1,0 +1,26 @@
+.hg-ad-root{box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.4;color:#eee;z-index:2147482990}
+.hg-ad-root *{box-sizing:border-box}
+.hg-ad-root[hidden]{display:none!important}
+.hg-ad-left,.hg-ad-right,.hg-ad-corner,.hg-ad-danmaku,.hg-ad-splash,.hg-ad-pause,.hg-ad-interstitial{position:fixed;background:#181818f5;border:1px solid #3b3b3b;border-radius:10px;padding:28px 10px 10px;overflow:hidden;box-shadow:0 5px 22px #0005}
+.hg-ad-label{position:absolute;top:7px;left:10px;color:#bbb;font-size:11px!important;font-weight:400}
+.hg-ad-close{position:absolute;top:2px;right:3px;width:28px;height:26px;padding:0!important;background:#252525!important;border:0!important;border-radius:6px;color:#ddd!important;font-size:21px!important;line-height:26px!important;cursor:pointer;z-index:2}
+.hg-ad-close:hover,.hg-ad-close:focus-visible{color:#ff9a4e!important;outline:2px solid #ff9a4e}
+.hg-ad-link{display:flex;flex-direction:column;gap:6px;color:inherit!important;text-decoration:none!important;overflow:hidden;cursor:pointer}
+.hg-ad-link:hover .hg-ad-title{color:#ff9a4e}
+.hg-ad-title{font-size:15px!important;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.hg-ad-text{font-size:13px!important;color:#aaa;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.hg-ad-media{display:block;width:100%;max-height:45vh;object-fit:contain;border-radius:5px}
+.hg-ad-overlay{position:fixed;inset:0;display:grid;place-items:center;background:#0009;z-index:2147483200}
+.hg-ad-overlay>.hg-ad-root{position:relative;inset:auto;width:min(540px,86vw);max-height:80vh;overflow:auto;padding:32px 18px 18px}
+.hg-ad-corner{max-height:156px}
+.hg-ad-corner .hg-ad-media{max-height:64px}
+.hg-ad-corner .hg-ad-text{-webkit-line-clamp:1}
+.hg-ad-track{position:fixed;height:88px;overflow:hidden;pointer-events:none}
+.hg-ad-danmaku{position:absolute;left:100%;top:0;white-space:nowrap;width:max-content;padding:25px 35px 9px 10px;pointer-events:auto;animation:hg-ad-scroll linear both}
+.hg-ad-danmaku:hover,.hg-ad-danmaku:focus-within{animation-play-state:paused}
+.hg-ad-danmaku .hg-ad-link{flex-direction:row;align-items:center;gap:8px}
+.hg-ad-danmaku .hg-ad-media{width:auto;max-width:110px;height:34px}
+.hg-ad-danmaku .hg-ad-title{font-size:17px!important;white-space:nowrap}
+.hg-ad-danmaku .hg-ad-text{display:none}
+@keyframes hg-ad-scroll{to{transform:translateX(calc(-1 * var(--hg-ad-travel,1800px)))}}
+@media(prefers-reduced-motion:reduce){.hg-ad-danmaku{animation:none;left:15%}}

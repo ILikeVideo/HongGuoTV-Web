@@ -1,0 +1,82 @@
+{
+  "manifest_version": 3,
+  "name": "红果网页增强",
+  "version": "0.2.3",
+  "description": "红果短剧选集播放、手机账号片单与观看进度续播。",
+  "minimum_chrome_version": "138",
+  "icons": {
+    "16": "logo.png",
+    "32": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
+  },
+  "permissions": ["storage", "unlimitedStorage", "cookies", "declarativeNetRequestWithHostAccess", "offscreen"],
+  "host_permissions": [
+    "https://tv-admin.curatedlifefinds.com/*",
+    "https://hongguoduanju.com/*",
+    "https://www.hongguoduanju.com/*",
+    "https://api5-normal-sinfonlineb.fqnovel.com/*",
+    "https://api5-normal-sinfonlinec.fqnovel.com/*",
+    "https://security.snssdk.com/*",
+    "https://reading.snssdk.com/*",
+    "https://*.snssdk.com/*",
+    "https://*.fqnovel.com/*",
+    "https://*.fqnovelvod.com/*",
+    "https://*.qznovelvod.com/*",
+    "https://*.douyinvod.com/*",
+    "https://*.bytecdn.cn/*",
+    "https://*.pstatp.com/*",
+    "https://*.fqnovelpic.com/*",
+    "https://*.byteimg.com/*",
+    "https://*.douyinpic.com/*",
+    "http://*.fqnovelvod.com/*",
+    "http://*.qznovelvod.com/*",
+    "http://*.douyinvod.com/*",
+    "http://*.bytecdn.cn/*",
+    "http://*.pstatp.com/*",
+    "http://*.snssdk.com/*"
+  ],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": ["https://hongguoduanju.com/*", "https://www.hongguoduanju.com/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://hongguoduanju.com/*",
+        "https://www.hongguoduanju.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "打开红果官网",
+    "default_icon": "logo.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "logo.png",
+        "player.html",
+        "host.js",
+        "host.css",
+        "sandbox.html",
+        "sandbox.js"
+      ],
+      "matches": [
+        "https://hongguoduanju.com/*",
+        "https://www.hongguoduanju.com/*"
+      ]
+    }
+  ],
+  "sandbox": {"pages":["sandbox.html"]},
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; frame-src 'self';",
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-eval'; worker-src blob:; object-src 'none'; media-src blob: https:; img-src https: data:; style-src 'self' 'unsafe-inline'; connect-src 'none';"
+  }
+}

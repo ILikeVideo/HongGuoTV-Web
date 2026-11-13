@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>红果网页增强 · 账号</title>
+    <link rel="stylesheet" href="account.css" />
+  </head>
+  <body>
+    <main>
+      <div class="brand">红果网页增强</div>
+      <h1>把手机片单，带到电脑上</h1>
+      <p class="intro">查看历史、收藏、点赞和预约，接着上次的位置观看。</p>
+      <section id="signed" hidden>
+        <h2 id="nickname"></h2>
+        <p id="phone"></p>
+        <p id="availability"></p>
+      </section>
+      <button id="website">前往官网登录</button
+      ><button id="refresh" class="secondary">刷新官网账号状态</button>
+      <p id="status" role="status"></p>
+      <p class="privacy">
+        登录、验证码和退出均由红果官网完成。扩展只在登录成功后关联本机设备与官网手机号；官网只提供脱敏号码时保留脱敏值。账号资料保存在当前浏览器中，仅用于读取红果官方片单，不主动写回观看历史或片单。
+      </p>
+    </main>
+    <script src="account.js"></script>
+  </body>
+</html>

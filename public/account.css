@@ -1,0 +1,100 @@
+:root {
+  color-scheme: dark;
+  font:
+    15px system-ui,
+    sans-serif;
+  color: #eee;
+  background: #111;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 380px;
+}
+main {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 30px;
+}
+.brand {
+  font-size: 18px;
+  color: #ff9a4e;
+  font-weight: 700;
+}
+h1 {
+  font-size: 25px;
+  margin: 26px 0 12px;
+}
+p {
+  line-height: 1.7;
+}
+.intro,
+.privacy {
+  color: #999;
+}
+.privacy {
+  font-size: 12px;
+  margin-top: 26px;
+}
+input,
+button {
+  font: inherit;
+  border-radius: 8px;
+  border: 1px solid #3d3d3d;
+  padding: 12px;
+}
+input {
+  background: #202020;
+  color: #fff;
+  display: block;
+  width: 100%;
+  margin: 8px 0 18px;
+}
+label {
+  color: #bbb;
+}
+button {
+  cursor: pointer;
+  background: #f4914d;
+  color: #17110d;
+  width: 100%;
+  font-weight: 600;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+button.secondary {
+  background: #242424;
+  color: #ddd;
+}
+.code-row {
+  display: flex;
+  gap: 10px;
+  align-items: start;
+}
+.code-row input {
+  min-width: 0;
+  flex: 1;
+}
+.code-row button {
+  width: 145px;
+  margin-top: 8px;
+}
+.divider {
+  margin: 24px 0;
+  color: #777;
+  text-align: center;
+  font-size: 13px;
+}
+#status {
+  color: #ffad75;
+  min-height: 24px;
+}
+a {
+  color: #ffad75;
+  display: block;
+  margin-top: 20px;
+}
